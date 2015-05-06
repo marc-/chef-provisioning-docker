@@ -231,7 +231,8 @@ module DockerDriver
           convergence_strategy,
           :command => docker_options[:command],
           :env => docker_options[:env],
-          :ports => [].push(docker_options[:ports]).flatten,
+          :ports => Array(docker_options[:ports]),
+          :volumes => Array(docker_options[:volumes]),
           :keep_stdin_open => docker_options[:keep_stdin_open]
         )
     end

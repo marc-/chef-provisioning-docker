@@ -3,7 +3,7 @@ require 'chef/provisioning/driver'
 require 'chef/provisioning/docker_driver/version'
 require 'chef/provisioning/docker_driver/docker_transport'
 require 'chef/provisioning/docker_driver/docker_container_machine'
-require 'chef/provisioning/convergence_strategy/install_cached'
+require 'chef/provisioning/docker_driver/docker_convergence_strategy'
 require 'chef/provisioning/convergence_strategy/no_converge'
 require 'chef/mash'
 
@@ -95,7 +95,7 @@ module DockerDriver
       docker_options = machine_options[:docker_options]
 
       base_image = docker_options[:base_image]
-      if !base_image
+      if base_image.nil?
         Chef::Log.debug("No base images specified in docker options.")
         base_image = base_image_for(machine_spec)
       end
@@ -176,7 +176,7 @@ module DockerDriver
       Chef::Log.debug("Removing #{container_name}")
       container.delete
 
-      if !machine_spec.attrs[:keep_image] && !machine_options[:keep_image]
+      unless machine_spec.attrs[:keep_image] || machine_options[:keep_image]
         Chef::Log.debug("Destroying image: chef:#{container_name}")
         image = Docker::Image.get("chef:#{container_name}")
         image.delete
@@ -250,8 +250,9 @@ module DockerDriver
 
     def convergence_strategy_for(machine_spec, machine_options)
       @unix_convergence_strategy ||= begin
-        Chef::Provisioning::ConvergenceStrategy::InstallCached.
+        Chef::Provisioning::DockerDriver::ConvergenceStrategy.
             new(machine_options[:convergence_options], config)
+
       end
     end
 
